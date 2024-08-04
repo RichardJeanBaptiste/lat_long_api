@@ -1,15 +1,15 @@
-const express = require('express')
-const port = 3000;
 require('dotenv').config();
+const express = require('express')
 const mongoose = require('mongoose');
-//const userSchema = require('./schemas');
-const {haversine, parseCoordinate, isValidCoordinate} = require('./distance');
+const {haversine, parseCoordinate} = require('./distance');
 var bodyParser = require('body-parser')
 let mongo_uri = process.env.MONGO_URI;
+
 
 const app = express()
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+const port = 3000;
 
 const userSchema = new mongoose.Schema({
     user: {
@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema({
         type: [Number],
       },
     }
-  });
+  }); 
 
 
 userSchema.pre('save', function(next) {
@@ -48,41 +48,65 @@ userSchema.index({ location: '2dsphere' });
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // Find users within proximity
-app.get('/find_users', async (req, res) => {
+app.post('/find_users', async (req, res) => {
     try {
-
         await mongoose.connect(mongo_uri,{
             dbName: 'Users',
         })
-    
-        const earthRadiusInMeters = 6371000;
-        const distanceInRadians = 10000 / earthRadiusInMeters;
 
-        const users = await User.find({
-            location: {
-                $geoWithin: {
-                    $centerSphere: [[parseCoordinate(req.body.long), parseCoordinate(req.body.lat)], distanceInRadians],
+        // Check If Given Coordinates are the write format 
+        if(parseCoordinate(req.body.lat) == false || parseCoordinate(req.body.long) == false){
+            res.send("Given Coordinates are in the wrong format");
+        } else {
+
+            const earthRadiusInMeters = 6371000;
+            const distanceInRadians = 10000 / earthRadiusInMeters;
+
+            const users = await User.find({
+                location: {
+                    $geoWithin: {
+                        $centerSphere: [[parseCoordinate(req.body.long), parseCoordinate(req.body.lat)], distanceInRadians],
+                    },
                 },
-            },
-        }).catch((error) => {
-            console.log(`Mongoose search error: \n${error}`);
-        });
-
-        let usersFound = [];
-
-        users.forEach((x) => {
-            //console.log(`${x.user} -- ${x.lat} -- ${x.long}`);
-            let distance = haversine(parseCoordinate(req.body.lat), parseCoordinate(req.body.long), x.lat, x.long);
-
-            usersFound.push({
-                user: x.user,
-                latitude: x.lat,
-                longitude: x.long,
-                distance: parseFloat(distance.toFixed(2)),
+            }).catch((error) => {
+                console.log(`Mongoose search error: \n${error}`);
             });
-        })
-        usersFound.sort((a, b) => a.distance - b.distance);
-        res.send(usersFound);
+    
+            let usersFound = [];
+    
+            users.forEach((x) => {
+                let distance = haversine(parseCoordinate(req.body.lat), parseCoordinate(req.body.long), x.lat, x.long);
+    
+                usersFound.push({
+                    user: x.user,
+                    latitude: x.lat,
+                    longitude: x.long,
+                    distance: parseFloat(distance.toFixed(2)),
+                });
+            })
+
+            usersFound.sort((a, b) => a.distance - b.distance);
+
+            // Paginate Results
+            const page = parseInt(req.query.page, 10) || 1; 
+            const limit = parseInt(req.query.limit, 10) || 10;
+
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+
+            // Get the paginated results
+            const paginatedData = usersFound.slice(startIndex, endIndex);
+
+            // Return paginated results
+            res.json({
+                page,
+                limit,
+                totalResults: usersFound.length,
+                totalPages: Math.ceil(usersFound.length / limit),
+                results: paginatedData
+            });
+        }
+        
     } catch (error) {
         console.log(`/Find_Users threw error: \n ${error}`);
         res.send("Something went wrong when finding users within the error :(");
@@ -91,9 +115,7 @@ app.get('/find_users', async (req, res) => {
 
 /** ADD User w/ Lat & Long */
 app.post('/add_user', async(req, res) => {
-
     try {
-
         await mongoose.connect(mongo_uri,{
             dbName: 'Users',
         })
@@ -126,5 +148,5 @@ app.post('/add_user', async(req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+  console.log(`App listening on port ${port}`)
 })

@@ -37,13 +37,4 @@ function parseCoordinate(coordinate) {
 // const distance = haversine(51.5074, -0.1278, 51.4000, -0.1273);
 // console.log(`Distance: ${distance} km`);
 
-function isValidCoordinate(coord) {
-    // Define regex patterns for latitude and longitude
-    const latPattern = /^-?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?)$/;
-    const lonPattern = /^-?(?:1[0-7]\d|\d{1,2})(?:\.\d+)?|180(?:\.0+)?$/;
-
-    // Check if the input matches the latitude or longitude pattern
-    return latPattern.test(coord) || lonPattern.test(coord);
-}
-
-module.exports = {haversine, parseCoordinate, isValidCoordinate};
+module.exports = {haversine, parseCoordinate};
