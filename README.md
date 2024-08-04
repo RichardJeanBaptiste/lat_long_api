@@ -51,7 +51,6 @@ POST /find_users : find users within 10km of given coordinates
               long: "57.6782",
               distance: 6.2,
             },
-            
           ]
 
 
