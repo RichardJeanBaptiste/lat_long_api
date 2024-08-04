@@ -3,7 +3,7 @@ const express = require('express')
 const port = 3000;
 require('dotenv').config();
 const mongoose = require('mongoose');
-const userSchema = require('./schemas');
+//const userSchema = require('./schemas');
 var bodyParser = require('body-parser')
 
 let mongo_uri = process.env.MONGO_URI;
@@ -25,6 +25,19 @@ app.get('/find_users', (req, res) => {
 app.post('/add_user', async(req, res) => {
 
     try {
+
+        const userSchema = new mongoose.Schema({
+            user: {
+                type: String,
+            },
+            lat: {
+                type: String,
+            },
+            long: {
+                type: String
+            }
+        });
+
         const User = mongoose.models.User || mongoose.model('User', userSchema);
 
         await mongoose.connect(mongo_uri,{
@@ -33,8 +46,8 @@ app.post('/add_user', async(req, res) => {
     
         console.log(req.body);
     
-        let newUser = await new User({
-            user: 1,
+        let newUser = new User({
+            user: req.body.user,
             lat: req.body.lat,
             long: req.body.long,
         })
