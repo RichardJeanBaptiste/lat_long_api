@@ -5,13 +5,12 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
     lat: {
-        type: Number
+        type: String,
     },
     long: {
-        type: Number
+        type: String
     }
 });
 
-const User = mongoose.models.User || mongoose.model("User", userSchema, "users");
 
-module.exports = { User };
+module.exports = { userSchema };
