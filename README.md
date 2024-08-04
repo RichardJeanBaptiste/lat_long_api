@@ -24,11 +24,11 @@ To run this application locally
 
 ## Routes
 
-POST /add_user : add user to database 
+### POST /add_user : add user to database 
     - {user: String, lat: Number | String, long: Number | String}
     - Accepted latitude and longitude format are of the form : "57.6782" / "-34.0522° N"
 
-POST /find_users : find users within 10km of given coordinates
+### POST /find_users : find users within 10km of given coordinates
     - {lat: Number | String, long: Number | String}
     - Accepted latitude and longitude format are of the form : "57.6782" / "-34.0522° N"
     - return format:
